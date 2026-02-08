@@ -23,7 +23,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setSuccess("")
@@ -36,20 +36,15 @@ export default function SignupPage() {
       return
     }
 
-    try {
-      const result = await signup(fullName, email, password)
-      
-      if (result.success) {
-        setSuccess("Inscription réussie ! Redirection...")
-        setTimeout(() => {
-          router.push("/orientation")
-        }, 1500)
-      } else {
-        setError(result.error || "Une erreur est survenue")
-        setIsSubmitting(false)
-      }
-    } catch {
-      setError("Une erreur est survenue")
+    const result = signup(fullName, email, password)
+
+    if (result.success) {
+      setSuccess("Inscription reussie ! Redirection...")
+      setTimeout(() => {
+        router.push("/orientation")
+      }, 1500)
+    } else {
+      setError(result.error || "Une erreur est survenue")
       setIsSubmitting(false)
     }
   }

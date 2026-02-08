@@ -20,22 +20,17 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsSubmitting(true)
 
-    try {
-      const result = await login(email, password)
-      
-      if (result.success) {
-        router.push("/orientation")
-      } else {
-        setError(result.error || "Une erreur est survenue")
-        setIsSubmitting(false)
-      }
-    } catch {
-      setError("Une erreur est survenue")
+    const result = login(email, password)
+
+    if (result.success) {
+      router.push("/orientation")
+    } else {
+      setError(result.error || "Une erreur est survenue")
       setIsSubmitting(false)
     }
   }

@@ -1,7 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -29,12 +27,12 @@ export default function HistoriquePage() {
 
   useEffect(() => {
     if (user) {
-      getTestHistory().then(setHistory)
+      setHistory(getTestHistory())
     }
   }, [user, getTestHistory])
 
-  const handleDelete = async (id: string) => {
-    await deleteTestEntry(id)
+  const handleDelete = (id: string) => {
+    deleteTestEntry(id)
     setHistory(prev => prev.filter(h => h.id !== id))
   }
 
