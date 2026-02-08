@@ -1,8 +1,9 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,25 +23,18 @@ import {
 import { useAuth, type TestHistoryEntry } from "@/lib/auth-context"
 
 export default function HistoriquePage() {
-  const router = useRouter()
   const { user, logout, isLoading, getTestHistory, deleteTestEntry } = useAuth()
   const [history, setHistory] = useState<TestHistoryEntry[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login")
-    }
-  }, [user, isLoading, router])
-
-  useEffect(() => {
     if (user) {
-      setHistory(getTestHistory())
+      getTestHistory().then(setHistory)
     }
   }, [user, getTestHistory])
 
-  const handleDelete = (id: string) => {
-    deleteTestEntry(id)
+  const handleDelete = async (id: string) => {
+    await deleteTestEntry(id)
     setHistory(prev => prev.filter(h => h.id !== id))
   }
 
@@ -101,7 +95,7 @@ export default function HistoriquePage() {
                 </div>
                 {user.fullName}
               </span>
-              <Button variant="outline" size="sm" onClick={logout} className="gap-1.5 bg-transparent rounded-full">
+              <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Deconnexion</span>
               </Button>

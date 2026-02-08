@@ -1,14 +1,20 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react"
+import { createClient } from "@/lib/supabase/client"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
-type User = {
+type AppUser = {
+  id: string
   fullName: string
   email: string
-}
-
-type StoredUser = User & {
-  password: string
 }
 
 export type TestHistoryEntry = {
@@ -24,164 +30,201 @@ export type TestHistoryEntry = {
 }
 
 type AuthContextType = {
-  user: User | null
+  user: AppUser | null
   isLoading: boolean
-  login: (email: string, password: string) => { success: boolean; error?: string }
-  signup: (fullName: string, email: string, password: string) => { success: boolean; error?: string }
-  logout: () => void
-  saveTestResult: (answers: Record<string, unknown>, recommendations: TestHistoryEntry["recommendations"]) => void
-  getTestHistory: () => TestHistoryEntry[]
-  deleteTestEntry: (id: string) => void
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>
+  signup: (
+    fullName: string,
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
+  saveTestResult: (
+    answers: Record<string, unknown>,
+    recommendations: TestHistoryEntry["recommendations"]
+  ) => Promise<void>
+  getTestHistory: () => Promise<TestHistoryEntry[]>
+  deleteTestEntry: (id: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function mapSupabaseUser(supabaseUser: SupabaseUser): AppUser {
+  return {
+    id: supabaseUser.id,
+    fullName:
+      supabaseUser.user_metadata?.full_name ||
+      supabaseUser.email?.split("@")[0] ||
+      "Utilisateur",
+    email: supabaseUser.email || "",
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AppUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
-    // Check for existing session on mount
-    const storedSession = localStorage.getItem("monorienta_session")
-    if (storedSession) {
-      try {
-        const sessionUser = JSON.parse(storedSession) as User
-        setUser(sessionUser)
-      } catch {
-        localStorage.removeItem("monorienta_session")
+    // Get initial session
+    const getSession = async () => {
+      const {
+        data: { user: supabaseUser },
+      } = await supabase.auth.getUser()
+      if (supabaseUser) {
+        setUser(mapSupabaseUser(supabaseUser))
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
-  }, [])
+    getSession()
 
-  const getStoredUsers = (): StoredUser[] => {
-    const stored = localStorage.getItem("monorienta_users")
-    if (stored) {
-      try {
-        return JSON.parse(stored)
-      } catch {
-        return []
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(mapSupabaseUser(session.user))
+      } else {
+        setUser(null)
       }
-    }
-    return []
-  }
+    })
 
-  const saveStoredUsers = (users: StoredUser[]) => {
-    localStorage.setItem("monorienta_users", JSON.stringify(users))
-  }
+    return () => subscription.unsubscribe()
+  }, [supabase])
 
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
-  const signup = (fullName: string, email: string, password: string): { success: boolean; error?: string } => {
-    // Validation
+  const signup = async (
+    fullName: string,
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string }> => {
     if (!fullName.trim()) {
       return { success: false, error: "Le nom complet est requis" }
     }
-    if (!isValidEmail(email)) {
-      return { success: false, error: "Format d'email invalide" }
-    }
     if (password.length < 6) {
-      return { success: false, error: "Le mot de passe doit contenir au moins 6 caractères" }
+      return {
+        success: false,
+        error: "Le mot de passe doit contenir au moins 6 caractères",
+      }
     }
 
-    const users = getStoredUsers()
-    
-    // Check if email already exists
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      return { success: false, error: "Cet email est déjà utilisé" }
-    }
-
-    // Create new user
-    const newUser: StoredUser = {
-      fullName: fullName.trim(),
-      email: email.toLowerCase(),
+    const { error } = await supabase.auth.signUp({
+      email,
       password,
+      options: {
+        emailRedirectTo:
+          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+          `${window.location.origin}/orientation`,
+        data: {
+          full_name: fullName.trim(),
+        },
+      },
+    })
+
+    if (error) {
+      if (error.message.includes("already registered")) {
+        return { success: false, error: "Cet email est déjà utilisé" }
+      }
+      return { success: false, error: error.message }
     }
-
-    users.push(newUser)
-    saveStoredUsers(users)
-
-    // Auto login after signup
-    const sessionUser: User = { fullName: newUser.fullName, email: newUser.email }
-    setUser(sessionUser)
-    localStorage.setItem("monorienta_session", JSON.stringify(sessionUser))
 
     return { success: true }
   }
 
-  const login = (email: string, password: string): { success: boolean; error?: string } => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string }> => {
     if (!email || !password) {
       return { success: false, error: "Email et mot de passe requis" }
     }
 
-    const users = getStoredUsers()
-    const foundUser = users.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    )
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-    if (!foundUser) {
-      return { success: false, error: "Email ou mot de passe incorrect" }
+    if (error) {
+      if (
+        error.message.includes("Invalid login credentials")
+      ) {
+        return { success: false, error: "Email ou mot de passe incorrect" }
+      }
+      return { success: false, error: error.message }
     }
-
-    const sessionUser: User = { fullName: foundUser.fullName, email: foundUser.email }
-    setUser(sessionUser)
-    localStorage.setItem("monorienta_session", JSON.stringify(sessionUser))
 
     return { success: true }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut()
     setUser(null)
-    localStorage.removeItem("monorienta_session")
   }
 
-  const getHistoryKey = useCallback((email: string) => `monorienta_history_${email.toLowerCase()}`, [])
+  const saveTestResult = useCallback(
+    async (
+      answers: Record<string, unknown>,
+      recommendations: TestHistoryEntry["recommendations"]
+    ) => {
+      if (!user) return
 
-  const saveTestResult = useCallback((answers: Record<string, unknown>, recommendations: TestHistoryEntry["recommendations"]) => {
-    if (!user) return
+      await supabase.from("test_history").insert({
+        user_id: user.id,
+        answers,
+        recommendations: recommendations.map((r) => ({
+          title: r.title,
+          matchScore: r.matchScore,
+          difficulty: r.difficulty,
+          description: r.description,
+        })),
+      })
+    },
+    [user, supabase]
+  )
 
-    const key = getHistoryKey(user.email)
-    const existing = localStorage.getItem(key)
-    const history: TestHistoryEntry[] = existing ? JSON.parse(existing) : []
-
-    const entry: TestHistoryEntry = {
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
-      answers,
-      recommendations: recommendations.map(r => ({
-        title: r.title,
-        matchScore: r.matchScore,
-        difficulty: r.difficulty,
-        description: r.description,
-      })),
-    }
-
-    history.unshift(entry)
-    localStorage.setItem(key, JSON.stringify(history))
-  }, [user, getHistoryKey])
-
-  const getTestHistory = useCallback((): TestHistoryEntry[] => {
+  const getTestHistory = useCallback(async (): Promise<TestHistoryEntry[]> => {
     if (!user) return []
-    const key = getHistoryKey(user.email)
-    const existing = localStorage.getItem(key)
-    return existing ? JSON.parse(existing) : []
-  }, [user, getHistoryKey])
 
-  const deleteTestEntry = useCallback((id: string) => {
-    if (!user) return
-    const key = getHistoryKey(user.email)
-    const existing = localStorage.getItem(key)
-    if (!existing) return
-    const history: TestHistoryEntry[] = JSON.parse(existing)
-    const updated = history.filter(h => h.id !== id)
-    localStorage.setItem(key, JSON.stringify(updated))
-  }, [user, getHistoryKey])
+    const { data, error } = await supabase
+      .from("test_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+
+    if (error || !data) return []
+
+    return data.map((row) => ({
+      id: row.id,
+      date: row.created_at,
+      answers: row.answers as Record<string, unknown>,
+      recommendations: row.recommendations as TestHistoryEntry["recommendations"],
+    }))
+  }, [user, supabase])
+
+  const deleteTestEntry = useCallback(
+    async (id: string) => {
+      if (!user) return
+
+      await supabase.from("test_history").delete().eq("id", id).eq("user_id", user.id)
+    },
+    [user, supabase]
+  )
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, saveTestResult, getTestHistory, deleteTestEntry }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        login,
+        signup,
+        logout,
+        saveTestResult,
+        getTestHistory,
+        deleteTestEntry,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

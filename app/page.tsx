@@ -59,7 +59,7 @@ export default function HomePage() {
                       </div>
                       {user.fullName}
                     </span>
-                    <Button variant="outline" size="sm" onClick={logout} className="gap-1.5 bg-transparent rounded-full">
+                    <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
                       <LogOut className="h-4 w-4" />
                       <span className="hidden sm:inline">Déconnexion</span>
                     </Button>

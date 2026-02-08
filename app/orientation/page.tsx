@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
+
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -46,13 +48,6 @@ export default function OrientationPage() {
     location: "",
     budget: "",
   })
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login")
-    }
-  }, [user, isLoading, router])
 
   const progress = (currentStep / totalSteps) * 100
 
@@ -140,7 +135,7 @@ export default function OrientationPage() {
                 </div>
                 {user.fullName}
               </span>
-              <Button variant="outline" size="sm" onClick={logout} className="gap-1.5 bg-transparent rounded-full">
+              <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Déconnexion</span>
               </Button>
