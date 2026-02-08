@@ -261,7 +261,7 @@ export default function HistoriquePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t mt-16 bg-muted/30">
+      <footer className="border-t mt-16 bg-muted/30 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-6">
           <div className="text-center text-sm text-muted-foreground">
             <p>&copy; 2026 MonOrienta. Plateforme d'orientation pour lyceens senegalais.</p>

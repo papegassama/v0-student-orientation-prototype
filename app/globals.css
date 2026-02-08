@@ -123,5 +123,38 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* PWA safe area support */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Disable text selection on interactive elements for mobile */
+  button, a, label {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch-friendly targets */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Standalone PWA status bar fix */
+  @media all and (display-mode: standalone) {
+    body {
+      padding-top: env(safe-area-inset-top, 0px);
+    }
   }
 }

@@ -219,7 +219,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t mt-16 bg-muted/30">
+      <footer className="border-t mt-16 bg-muted/30 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-12 md:py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8">
             {/* Brand */}
