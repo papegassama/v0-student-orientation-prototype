@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
 import { MobileNav } from "@/components/mobile-nav"
+import { InstallPrompt } from "@/components/install-prompt"
 import "./globals.css"
 
 const _plusJakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans" })
@@ -24,19 +25,18 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      {
-        url: "/icon-192x192.jpg",
-        sizes: "192x192",
-        type: "image/jpeg",
-      },
-      {
-        url: "/icon-512x512.jpg",
-        sizes: "512x512",
-        type: "image/jpeg",
-      },
+      { url: "/icons/icon-96x96.jpg", sizes: "96x96", type: "image/jpeg" },
+      { url: "/icon-192x192.jpg", sizes: "192x192", type: "image/jpeg" },
+      { url: "/icon-512x512.jpg", sizes: "512x512", type: "image/jpeg" },
     ],
-    apple: "/icon-192x192.jpg",
+    apple: [
+      { url: "/icons/icon-152x152.jpg", sizes: "152x152" },
+      { url: "/icon-192x192.jpg", sizes: "180x180" },
+    ],
   },
+  other: [
+    { name: "mobile-web-app-capable", content: "yes" },
+  ],
 }
 
 export const viewport: Viewport = {
@@ -59,6 +59,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <MobileNav />
+          <InstallPrompt />
         </AuthProvider>
         <Analytics />
       </body>

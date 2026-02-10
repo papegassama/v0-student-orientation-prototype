@@ -151,10 +151,32 @@
     touch-action: manipulation;
   }
 
-  /* Standalone PWA status bar fix */
+  /* Standalone PWA mode */
   @media all and (display-mode: standalone) {
     body {
       padding-top: env(safe-area-inset-top, 0px);
+      /* Prevent overscroll bounce in PWA */
+      overscroll-behavior-y: none;
+    }
+  }
+
+  /* Prevent pull-to-refresh in standalone PWA */
+  @media all and (display-mode: standalone) {
+    html {
+      overscroll-behavior: none;
+    }
+  }
+
+  /* Ensure inputs don't zoom on iOS */
+  @media screen and (max-width: 767px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    select,
+    textarea {
+      font-size: 16px !important;
     }
   }
 }
