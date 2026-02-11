@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowRight, BookOpen, Target, Sparkles, LogOut, User, Zap, Rocket, Star } from "lucide-react"
+import { ArrowRight, BookOpen, Target, Sparkles, LogOut, User, Zap, Rocket, Star, Mail, Instagram, Facebook, Twitter } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
 export default function HomePage() {
@@ -43,6 +43,12 @@ export default function HomePage() {
             >
               Résultats
             </Link>
+            <Link
+              href="/historique"
+              className="hidden md:block text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Historique
+            </Link>
             {!isLoading && (
               <>
                 {user ? (
@@ -53,7 +59,7 @@ export default function HomePage() {
                       </div>
                       {user.fullName}
                     </span>
-                    <Button variant="outline" size="sm" onClick={logout} className="gap-1.5 bg-transparent rounded-full">
+                    <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
                       <LogOut className="h-4 w-4" />
                       <span className="hidden sm:inline">Déconnexion</span>
                     </Button>
@@ -213,26 +219,91 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t mt-16 bg-muted/30">
-        <div className="container mx-auto px-4 py-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Rocket className="h-5 w-5 text-primary-foreground" />
+      <footer className="border-t mt-16 bg-muted/30 pb-20 md:pb-0">
+        <div className="container mx-auto px-4 py-12 md:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8">
+            {/* Brand */}
+            <div className="md:col-span-1 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <Rocket className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <span className="font-bold text-lg">MonOrienta</span>
               </div>
-              <span className="font-bold text-lg">MonOrienta</span>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                La plateforme d'orientation pour les lyceens du Senegal. Decouvre ta voie, gratuitement.
+              </p>
             </div>
+
+            {/* Navigation */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground">Navigation</h4>
+              <nav className="flex flex-col gap-2.5">
+                <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">Accueil</Link>
+                <Link href="/orientation" className="text-sm text-muted-foreground hover:text-primary transition-colors">Orientation</Link>
+                <Link href="/historique" className="text-sm text-muted-foreground hover:text-primary transition-colors">Historique</Link>
+                <Link href="/results" className="text-sm text-muted-foreground hover:text-primary transition-colors">Resultats</Link>
+              </nav>
+            </div>
+
+            {/* Contact */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground">Contact</h4>
+              <div className="space-y-3">
+                <a
+                  href="mailto:MonOrienta@gmail.com"
+                  className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Mail className="h-4 w-4" />
+                  MonOrienta@gmail.com
+                </a>
+              </div>
+            </div>
+
+            {/* Social links */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground">Reseaux sociaux</h4>
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://instagram.com/monorienta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://facebook.com/monorienta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://twitter.com/monorienta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
+                  aria-label="Twitter / X"
+                >
+                  <Twitter className="h-5 w-5" />
+                </a>
+              </div>
+              <p className="text-xs text-muted-foreground">Suis-nous pour les dernieres actualites !</p>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="mt-12 pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © 2026 MonOrienta. Plateforme d'orientation pour lycéens sénégalais.
+              &copy; 2026 MonOrienta. Tous droits reserves.
             </p>
-            <div className="flex items-center gap-4">
-              <Link href="/orientation" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                Commencer
-              </Link>
-              <Link href="/results" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                Exemple
-              </Link>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Fait avec passion pour les lyceens du Senegal
+            </p>
           </div>
         </div>
       </footer>

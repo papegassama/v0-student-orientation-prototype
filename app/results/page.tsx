@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -21,15 +21,19 @@ import {
   Sparkles,
   Trophy,
   Target,
+  History,
 } from "lucide-react"
 import { generateRecommendations, type Answers, type Recommendation } from "@/lib/orientation-logic"
+import { useAuth } from "@/lib/auth-context"
 
 function ResultsContent() {
   const searchParams = useSearchParams()
+  const { user, saveTestResult } = useAuth()
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [answers, setAnswers] = useState<Answers | null>(null)
   const [compareMode, setCompareMode] = useState(false)
   const [selectedPaths, setSelectedPaths] = useState<number[]>([])
+  const hasSavedRef = useRef(false)
 
   useEffect(() => {
     const answersParam = searchParams.get("answers")
@@ -39,11 +43,25 @@ function ResultsContent() {
         setAnswers(parsedAnswers)
         const recs = generateRecommendations(parsedAnswers)
         setRecommendations(recs)
+
+        // Save to history (once per page load)
+        if (user && !hasSavedRef.current) {
+          hasSavedRef.current = true
+          saveTestResult(
+            parsedAnswers as unknown as Record<string, unknown>,
+            recs.map(r => ({
+              title: r.title,
+              matchScore: r.matchScore,
+              difficulty: r.difficulty,
+              description: r.description,
+            }))
+          )
+        }
       } catch (error) {
         console.error("Error parsing answers:", error)
       }
     }
-  }, [searchParams.get("answers")])
+  }, [searchParams.get("answers"), user, saveTestResult])
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -457,6 +475,14 @@ function ResultsContent() {
                 Refaire l'orientation
               </Link>
             </Button>
+            {user && (
+              <Button asChild variant="outline" size="lg" className="gap-2 w-full sm:w-auto bg-transparent rounded-full h-14 px-8 border-2 text-base font-bold">
+                <Link href="/historique">
+                  <History className="h-5 w-5" />
+                  Mon historique
+                </Link>
+              </Button>
+            )}
             <Button asChild size="lg" className="w-full sm:w-auto rounded-full h-14 px-8 shadow-lg shadow-primary/25 text-base font-bold">
               <Link href="/">
                 <Rocket className="h-5 w-5 mr-2" />
@@ -468,7 +494,7 @@ function ResultsContent() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t mt-16 bg-muted/30">
+      <footer className="border-t mt-16 bg-muted/30 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">

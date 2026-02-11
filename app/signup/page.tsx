@@ -37,9 +37,9 @@ export default function SignupPage() {
     }
 
     const result = signup(fullName, email, password)
-    
+
     if (result.success) {
-      setSuccess("Inscription réussie ! Redirection...")
+      setSuccess("Inscription reussie ! Redirection...")
       setTimeout(() => {
         router.push("/orientation")
       }, 1500)

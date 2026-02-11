@@ -26,14 +26,13 @@ export default function LoginPage() {
     setIsSubmitting(true)
 
     const result = login(email, password)
-    
+
     if (result.success) {
       router.push("/orientation")
     } else {
       setError(result.error || "Une erreur est survenue")
+      setIsSubmitting(false)
     }
-    
-    setIsSubmitting(false)
   }
 
   return (
