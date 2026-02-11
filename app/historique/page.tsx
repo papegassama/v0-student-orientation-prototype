@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
-  Rocket,
   LogOut,
   User,
   Clock,
@@ -17,8 +16,10 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  Rocket,
 } from "lucide-react"
 import { useAuth, type TestHistoryEntry } from "@/lib/auth-context"
+import { Logo } from "@/components/logo"
 
 export default function HistoriquePage() {
   const { user, logout, isLoading, getTestHistory, deleteTestEntry } = useAuth()
@@ -74,9 +75,7 @@ export default function HistoriquePage() {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25">
-              <Rocket className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <Logo />
             <span className="font-bold text-xl tracking-tight">MonOrienta</span>
           </Link>
           <div className="flex items-center gap-4">

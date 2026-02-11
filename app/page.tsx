@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowRight, BookOpen, Target, Sparkles, LogOut, User, Zap, Rocket, Star, Mail, Instagram, Facebook, Twitter } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { Logo } from "@/components/logo"
 
 export default function HomePage() {
   const { user, logout, isLoading } = useAuth()
@@ -22,9 +23,7 @@ export default function HomePage() {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25">
-              <Rocket className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <Logo />
             <span className="font-bold text-xl tracking-tight">MonOrienta</span>
           </div>
           <nav className="flex items-center gap-4 md:gap-6">
@@ -225,9 +224,7 @@ export default function HomePage() {
             {/* Brand */}
             <div className="md:col-span-1 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                  <Rocket className="h-5 w-5 text-primary-foreground" />
-                </div>
+                <Logo />
                 <span className="font-bold text-lg">MonOrienta</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
