@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/lib/auth-context"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { Logo } from "@/components/logo"
 
 type Answers = {
   stream: string
@@ -184,8 +185,8 @@ export default function OrientationPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center animate-pulse">
-            <Rocket className="h-6 w-6 text-primary-foreground" />
+          <div className="animate-pulse">
+            <Logo size="lg" />
           </div>
           <div className="text-muted-foreground font-medium">Chargement...</div>
         </div>
@@ -292,9 +293,7 @@ export default function OrientationPage() {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 md:gap-3">
-            <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25">
-              <Rocket className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" />
-            </div>
+            <Logo size="sm" />
             <span className="font-bold text-lg md:text-xl tracking-tight">MonOrienta</span>
           </Link>
           <div className="flex items-center gap-2 md:gap-4">

@@ -1,7 +1,6 @@
 "use client"
 
 import React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -9,8 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Rocket, Mail, Lock, User, AlertCircle, CheckCircle, Zap } from "lucide-react"
+import { Mail, Lock, User, AlertCircle, CheckCircle, Zap, Rocket } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { Logo } from "@/components/logo"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -61,9 +61,7 @@ export default function SignupPage() {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25">
-              <Rocket className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <Logo />
             <span className="font-bold text-xl tracking-tight">MonOrienta</span>
           </Link>
         </div>
