@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
     try {
+      console.log("[v0] Starting Google OAuth signin...")
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -105,12 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (error) {
-        return { success: false, error: error.message }
+        console.error("[v0] OAuth error:", error)
+        const errorMsg = error.message.includes("provider") 
+          ? "Le fournisseur Google n'est pas configuré. Veuillez contacter l'administrateur."
+          : error.message
+        return { success: false, error: errorMsg }
       }
 
+      console.log("[v0] OAuth redirect initiated")
       return { success: true }
     } catch (error) {
-      return { success: false, error: "Une erreur est survenue lors de la connexion" }
+      console.error("[v0] Exception during OAuth:", error)
+      return { success: false, error: "Une erreur est survenue lors de la connexion. Veuillez réessayer." }
     }
   }
 

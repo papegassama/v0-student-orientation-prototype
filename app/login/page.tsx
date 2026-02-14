@@ -61,9 +61,19 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 p-4 rounded-lg bg-destructive/10 text-destructive text-sm">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Erreur de connexion</p>
+                  <p className="text-xs mt-1">{error}</p>
+                  {error.includes("n'est pas configuré") && (
+                    <p className="text-xs mt-2 opacity-80">
+                      Veuillez contacter l'administrateur pour activer Google OAuth.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
