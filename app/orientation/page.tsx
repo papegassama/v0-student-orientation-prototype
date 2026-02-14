@@ -146,6 +146,11 @@ export default function OrientationPage() {
     }
   }
 
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
+  }
+
   const goToResults = () => {
     const params = new URLSearchParams({ answers: JSON.stringify(answers) })
     router.push(`/results?${params.toString()}`)
@@ -263,7 +268,7 @@ export default function OrientationPage() {
         <div>
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${meta.color} text-sm font-bold border mb-4`}>
             {meta.icon}
-            {step === 1 && user ? `Bienvenue, ${user.fullName} !` : meta.badge}
+            {step === 1 && user ? `Bienvenue, ${user.name || user.email} !` : meta.badge}
           </div>
           <h2 className="text-3xl md:text-4xl font-black">Etape {step}: {meta.title}</h2>
           <p className="text-lg text-muted-foreground mt-3">{meta.subtitle}</p>
@@ -306,9 +311,9 @@ export default function OrientationPage() {
                 <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
                   <User className="h-4 w-4 text-primary" />
                 </div>
-                {user.fullName}
+                {user.name || user.email}
               </span>
-              <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
+              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 bg-transparent rounded-full">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Deconnexion</span>
               </Button>

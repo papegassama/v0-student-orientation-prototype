@@ -50,10 +50,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is logged in and tries to access login/signup, redirect to orientation
-  const authPaths = ['/login', '/signup']
-  const isAuthPage = authPaths.some(path => request.nextUrl.pathname === path)
-  if (isAuthPage && user) {
+  // If user is logged in and tries to access login, redirect to orientation
+  if (request.nextUrl.pathname === '/login' && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/orientation'
     return NextResponse.redirect(url)

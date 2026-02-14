@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowRight, BookOpen, Target, Sparkles, LogOut, User, Zap, Rocket, Star, Mail, Instagram, Facebook, Twitter } from "lucide-react"
@@ -8,7 +10,13 @@ import { useAuth } from "@/lib/auth-context"
 import { Logo } from "@/components/logo"
 
 export default function HomePage() {
+  const router = useRouter()
   const { user, logout, isLoading } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,22 +64,17 @@ export default function HomePage() {
                       <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="h-4 w-4 text-primary" />
                       </div>
-                      {user.fullName}
+                      {user.name || user.email}
                     </span>
-                    <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
+                    <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 bg-transparent rounded-full">
                       <LogOut className="h-4 w-4" />
                       <span className="hidden sm:inline">Déconnexion</span>
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Button asChild variant="ghost" size="sm" className="rounded-full">
-                      <Link href="/login">Connexion</Link>
-                    </Button>
-                    <Button asChild size="sm" className="rounded-full shadow-lg shadow-primary/25">
-                      <Link href="/signup">S'inscrire</Link>
-                    </Button>
-                  </div>
+                  <Button asChild size="sm" className="rounded-full shadow-lg shadow-primary/25">
+                    <Link href="/login">Se connecter</Link>
+                  </Button>
                 )}
               </>
             )}

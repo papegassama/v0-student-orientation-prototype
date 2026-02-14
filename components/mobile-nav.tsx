@@ -15,8 +15,8 @@ export function MobileNav() {
   const pathname = usePathname()
   const { user } = useAuth()
 
-  // Don't show on login/signup pages
-  if (pathname === "/login" || pathname === "/signup") return null
+  // Don't show on login page
+  if (pathname === "/login") return null
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-area-bottom">

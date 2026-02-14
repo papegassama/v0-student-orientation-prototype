@@ -8,14 +8,13 @@ import {
   useCallback,
   type ReactNode,
 } from "react"
+import { createClient } from "@/lib/supabase/client"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 type User = {
-  fullName: string
+  id: string
   email: string
-}
-
-type StoredUser = User & {
-  password: string
+  name: string | null
 }
 
 export type TestHistoryEntry = {
@@ -33,9 +32,8 @@ export type TestHistoryEntry = {
 type AuthContextType = {
   user: User | null
   isLoading: boolean
-  login: (email: string, password: string) => { success: boolean; error?: string }
-  signup: (fullName: string, email: string, password: string) => { success: boolean; error?: string }
-  logout: () => void
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
   saveTestResult: (
     answers: Record<string, unknown>,
     recommendations: TestHistoryEntry["recommendations"]
@@ -49,102 +47,81 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
-    const storedSession = localStorage.getItem("monorienta_session")
-    if (storedSession) {
+    const initializeAuth = async () => {
       try {
-        const sessionUser = JSON.parse(storedSession) as User
-        setUser(sessionUser)
-      } catch {
-        localStorage.removeItem("monorienta_session")
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || "",
+            name: session.user.user_metadata?.full_name || null,
+          })
+        }
+      } catch (error) {
+        console.error("[v0] Error initializing auth:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
-    setIsLoading(false)
-  }, [])
 
-  const getUsers = (): StoredUser[] => {
-    try {
-      const stored = localStorage.getItem("monorienta_users")
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
-  }
+    initializeAuth()
 
-  const saveUsers = (users: StoredUser[]) => {
-    localStorage.setItem("monorienta_users", JSON.stringify(users))
-  }
-
-  const signup = (
-    fullName: string,
-    email: string,
-    password: string
-  ): { success: boolean; error?: string } => {
-    if (!fullName.trim()) {
-      return { success: false, error: "Le nom complet est requis" }
-    }
-    if (password.length < 6) {
-      return { success: false, error: "Le mot de passe doit contenir au moins 6 caracteres" }
-    }
-
-    const users = getUsers()
-    const existingUser = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
-    )
-    if (existingUser) {
-      return { success: false, error: "Cet email est deja utilise" }
-    }
-
-    const newUser: StoredUser = {
-      fullName: fullName.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-    }
-
-    users.push(newUser)
-    saveUsers(users)
-
-    const sessionUser: User = { fullName: newUser.fullName, email: newUser.email }
-    setUser(sessionUser)
-    localStorage.setItem("monorienta_session", JSON.stringify(sessionUser))
-
-    return { success: true }
-  }
-
-  const login = (
-    email: string,
-    password: string
-  ): { success: boolean; error?: string } => {
-    if (!email || !password) {
-      return { success: false, error: "Email et mot de passe requis" }
-    }
-
-    const users = getUsers()
-    const found = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || "",
+            name: session.user.user_metadata?.full_name || null,
+          })
+        } else {
+          setUser(null)
+        }
+      }
     )
 
-    if (!found) {
-      return { success: false, error: "Email ou mot de passe incorrect" }
+    return () => {
+      subscription?.unsubscribe()
     }
-
-    const sessionUser: User = { fullName: found.fullName, email: found.email }
-    setUser(sessionUser)
-    localStorage.setItem("monorienta_session", JSON.stringify(sessionUser))
-
-    return { success: true }
-  }
-
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem("monorienta_session")
-  }
+  }, [supabase.auth])
 
   const getHistoryKey = useCallback(
-    (email: string) => `monorienta_history_${email.toLowerCase()}`,
+    (userId: string) => `monorienta_history_${userId}`,
     []
   )
+
+  const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: "Une erreur est survenue lors de la connexion" }
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+    } catch (error) {
+      console.error("[v0] Error during logout:", error)
+    }
+  }
 
   const saveTestResult = useCallback(
     (
@@ -153,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ) => {
       if (!user) return
 
-      const key = getHistoryKey(user.email)
+      const key = getHistoryKey(user.id)
       const existing = localStorage.getItem(key)
       const history: TestHistoryEntry[] = existing ? JSON.parse(existing) : []
 
@@ -177,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const getTestHistory = useCallback((): TestHistoryEntry[] => {
     if (!user) return []
-    const key = getHistoryKey(user.email)
+    const key = getHistoryKey(user.id)
     const existing = localStorage.getItem(key)
     return existing ? JSON.parse(existing) : []
   }, [user, getHistoryKey])
@@ -185,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteTestEntry = useCallback(
     (id: string) => {
       if (!user) return
-      const key = getHistoryKey(user.email)
+      const key = getHistoryKey(user.id)
       const existing = localStorage.getItem(key)
       if (!existing) return
       const history: TestHistoryEntry[] = JSON.parse(existing)
@@ -200,8 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isLoading,
-        login,
-        signup,
+        signInWithGoogle,
         logout,
         saveTestResult,
         getTestHistory,

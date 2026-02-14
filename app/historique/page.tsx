@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +23,7 @@ import { useAuth, type TestHistoryEntry } from "@/lib/auth-context"
 import { Logo } from "@/components/logo"
 
 export default function HistoriquePage() {
+  const router = useRouter()
   const { user, logout, isLoading, getTestHistory, deleteTestEntry } = useAuth()
   const [history, setHistory] = useState<TestHistoryEntry[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -35,6 +37,11 @@ export default function HistoriquePage() {
   const handleDelete = (id: string) => {
     deleteTestEntry(id)
     setHistory(prev => prev.filter(h => h.id !== id))
+  }
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
   }
 
   const formatDate = (iso: string) => {
@@ -90,9 +97,9 @@ export default function HistoriquePage() {
                 <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
                   <User className="h-4 w-4 text-primary" />
                 </div>
-                {user.fullName}
+                {user.name || user.email}
               </span>
-              <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
+              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 bg-transparent rounded-full">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Deconnexion</span>
               </Button>
