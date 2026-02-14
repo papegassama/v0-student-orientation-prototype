@@ -55,7 +55,7 @@ function ResultsContent() {
               difficulty: r.difficulty,
               description: r.description,
             }))
-          )
+          ).catch(error => console.error("Error saving test result:", error))
         }
       } catch (error) {
         console.error("Error parsing answers:", error)

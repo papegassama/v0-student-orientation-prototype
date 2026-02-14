@@ -48,11 +48,13 @@ export function MobileNav() {
 
         {/* Profile/account tab */}
         <Link
-          href={user ? "/orientation" : "/login"}
+          href={user ? "/profile" : "/login"}
           className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation ${
-            pathname === "/login" || pathname === "/signup"
+            pathname === "/profile"
               ? "text-primary"
-              : "text-muted-foreground active:text-primary"
+              : pathname === "/login" || pathname === "/signup"
+                ? "text-primary"
+                : "text-muted-foreground active:text-primary"
           }`}
         >
           <div className={`h-5 w-5 rounded-full flex items-center justify-center ${
@@ -63,6 +65,9 @@ export function MobileNav() {
           <span className="text-[10px] font-semibold leading-tight">
             {user ? "Profil" : "Connexion"}
           </span>
+          {pathname === "/profile" && user && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+          )}
         </Link>
       </div>
     </nav>

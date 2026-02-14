@@ -23,7 +23,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setSuccess("")
@@ -36,7 +36,7 @@ export default function SignupPage() {
       return
     }
 
-    const result = signup(fullName, email, password)
+    const result = await signup(fullName, email, password)
 
     if (result.success) {
       setSuccess("Inscription reussie ! Redirection...")
