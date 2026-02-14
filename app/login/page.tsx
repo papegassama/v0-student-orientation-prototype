@@ -20,12 +20,12 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsSubmitting(true)
 
-    const result = login(email, password)
+    const result = await login(email, password)
 
     if (result.success) {
       router.push("/orientation")

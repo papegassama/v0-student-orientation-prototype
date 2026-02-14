@@ -146,7 +146,21 @@ export default function OrientationPage() {
     }
   }
 
-  const goToResults = () => {
+  const goToResults = async () => {
+    try {
+      // Save responses to database
+      await fetch("/api/orientation-responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: "all_questions",
+          response_data: answers,
+        }),
+      })
+    } catch (error) {
+      console.error("Error saving responses:", error)
+    }
+    
     const params = new URLSearchParams({ answers: JSON.stringify(answers) })
     router.push(`/results?${params.toString()}`)
   }
@@ -308,7 +322,7 @@ export default function OrientationPage() {
                 </div>
                 {user.fullName}
               </span>
-              <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
+              <Button variant="outline" size="sm" onClick={() => logout().then(() => router.push("/login"))} className="gap-1.5 bg-transparent rounded-full">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Deconnexion</span>
               </Button>

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowRight, BookOpen, Target, Sparkles, LogOut, User, Zap, Rocket, Star, Mail, Instagram, Facebook, Twitter } from "lucide-react"
@@ -8,7 +9,13 @@ import { useAuth } from "@/lib/auth-context"
 import { Logo } from "@/components/logo"
 
 export default function HomePage() {
+  const router = useRouter()
   const { user, logout, isLoading } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,7 +65,7 @@ export default function HomePage() {
                       </div>
                       {user.fullName}
                     </span>
-                    <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1.5 bg-transparent rounded-full">
+                    <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 bg-transparent rounded-full">
                       <LogOut className="h-4 w-4" />
                       <span className="hidden sm:inline">Déconnexion</span>
                     </Button>
