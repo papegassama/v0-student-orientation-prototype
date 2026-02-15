@@ -25,12 +25,21 @@ export default function LoginPage() {
     setError("")
     setIsSubmitting(true)
 
-    const result = await login(email, password)
+    try {
+      console.log("[v0] Login attempt for:", email)
+      const result = await login(email, password)
 
-    if (result.success) {
-      router.push("/orientation")
-    } else {
-      setError(result.error || "Une erreur est survenue")
+      if (result.success) {
+        console.log("[v0] Login successful, redirecting to orientation")
+        router.push("/orientation")
+      } else {
+        console.log("[v0] Login failed:", result.error)
+        setError(result.error || "Une erreur est survenue")
+        setIsSubmitting(false)
+      }
+    } catch (err) {
+      console.error("[v0] Login exception:", err)
+      setError("Une erreur inattendue est survenue")
       setIsSubmitting(false)
     }
   }

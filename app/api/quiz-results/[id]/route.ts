@@ -13,8 +13,11 @@ export async function DELETE(
     } = await supabase.auth.getUser()
 
     if (!user) {
+      console.log("[v0] DELETE quiz-results: Unauthorized - no user")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    console.log("[v0] DELETE quiz-results:", params.id, "for user", user.id)
 
     const { error } = await supabase
       .from("quiz_results")
@@ -23,12 +26,14 @@ export async function DELETE(
       .eq("user_id", user.id)
 
     if (error) {
+      console.error("[v0] DELETE quiz-results error:", error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
+    console.log("[v0] DELETE quiz-results: Successfully deleted")
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {
-    console.error("Error deleting quiz result:", error)
+    console.error("[v0] DELETE quiz-results exception:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

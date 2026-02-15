@@ -36,15 +36,24 @@ export default function SignupPage() {
       return
     }
 
-    const result = await signup(fullName, email, password)
+    try {
+      console.log("[v0] Signup attempt for:", email)
+      const result = await signup(fullName, email, password)
 
-    if (result.success) {
-      setSuccess("Inscription reussie ! Redirection...")
-      setTimeout(() => {
-        router.push("/orientation")
-      }, 1500)
-    } else {
-      setError(result.error || "Une erreur est survenue")
+      if (result.success) {
+        console.log("[v0] Signup successful, redirecting to orientation")
+        setSuccess("Inscription réussie ! Redirection...")
+        setTimeout(() => {
+          router.push("/orientation")
+        }, 1500)
+      } else {
+        console.log("[v0] Signup failed:", result.error)
+        setError(result.error || "Une erreur est survenue")
+        setIsSubmitting(false)
+      }
+    } catch (err) {
+      console.error("[v0] Signup exception:", err)
+      setError("Une erreur inattendue est survenue")
       setIsSubmitting(false)
     }
   }
