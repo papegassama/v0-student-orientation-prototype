@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
+import { deleteQuizResult } from "@/lib/auth-supabase"
+import { createClient } from "@/lib/supabase/server"
 
 export async function DELETE(
   request: NextRequest,
@@ -7,7 +8,6 @@ export async function DELETE(
 ) {
   try {
     const supabase = await createClient()
-
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -16,15 +16,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { error } = await supabase
-      .from("quiz_results")
-      .delete()
-      .eq("id", params.id)
-      .eq("user_id", user.id)
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
+    await deleteQuizResult(user.id, params.id)
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {
