@@ -58,22 +58,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } = await supabase.auth.getUser()
 
         if (supabaseUser) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("user_profiles")
             .select("*")
-            .eq("user_id", supabaseUser.id)
+            .eq("id", supabaseUser.id)
             .single()
 
-          if (profile) {
+          if (profile && !profileError) {
             setUser({
               id: supabaseUser.id,
               fullName: profile.full_name,
               email: supabaseUser.email || "",
             })
+          } else {
+            // User is authenticated but has no profile - this is ok during initial signup
+            setUser({
+              id: supabaseUser.id,
+              fullName: "",
+              email: supabaseUser.email || "",
+            })
           }
         }
       } catch (error) {
-        console.error("Auth initialization error:", error)
+        console.error("[v0] Auth initialization error:", error)
       } finally {
         setIsLoading(false)
       }
@@ -98,25 +105,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error: authError } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
 
       if (authError) {
+        console.log("[v0] Signup auth error:", authError)
         return { success: false, error: authError.message }
       }
 
       if (data.user) {
+        console.log("[v0] User created:", data.user.id)
+        
+        // Create user profile with id as primary key (references auth.users.id)
         const { error: profileError } = await supabase
           .from("user_profiles")
           .insert([
             {
-              user_id: data.user.id,
+              id: data.user.id,
               full_name: fullName.trim(),
               email: email.toLowerCase().trim(),
             },
           ])
 
         if (profileError) {
-          return { success: false, error: profileError.message }
+          console.log("[v0] Profile creation error:", profileError)
+          return { success: false, error: "Impossible de créer le profil. Veuillez réessayer." }
         }
 
         setUser({
@@ -128,8 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true }
       }
 
-      return { success: false, error: "Signup failed" }
+      return { success: false, error: "Erreur lors de l'inscription" }
     } catch (error) {
+      console.log("[v0] Signup exception:", error)
       return { success: false, error: "Une erreur est survenue" }
     }
   }
@@ -149,31 +165,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (authError) {
-        return { success: false, error: "Email ou mot de passe incorrect" }
+        console.log("[v0] Login auth error:", authError.message)
+        // Provide clear error messages
+        if (authError.message.includes("Invalid login credentials")) {
+          return { success: false, error: "Email ou mot de passe incorrect" }
+        }
+        if (authError.message.includes("Email not confirmed")) {
+          return { success: false, error: "Vérifiez votre email pour confirmer votre compte" }
+        }
+        return { success: false, error: authError.message }
       }
 
       if (data.user) {
+        console.log("[v0] Login successful for:", data.user.email)
+        
         const { data: profile, error: profileError } = await supabase
           .from("user_profiles")
           .select("*")
-          .eq("user_id", data.user.id)
+          .eq("id", data.user.id)
           .single()
 
-        if (profileError || !profile) {
-          return { success: false, error: "Profil utilisateur non trouvé" }
+        if (profileError) {
+          console.log("[v0] Profile fetch error:", profileError)
         }
 
-        setUser({
-          id: data.user.id,
-          fullName: profile.full_name,
-          email: data.user.email || "",
-        })
+        if (profile) {
+          setUser({
+            id: data.user.id,
+            fullName: profile.full_name,
+            email: data.user.email || "",
+          })
+        } else {
+          // User is authenticated, even if profile is missing
+          setUser({
+            id: data.user.id,
+            fullName: "",
+            email: data.user.email || "",
+          })
+        }
 
         return { success: true }
       }
 
-      return { success: false, error: "Login failed" }
+      return { success: false, error: "Erreur de connexion" }
     } catch (error) {
+      console.log("[v0] Login exception:", error)
       return { success: false, error: "Une erreur est survenue" }
     }
   }
