@@ -1,37 +1,30 @@
-import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
+import { adminAuth, adminDb } from "@/lib/firebase-admin"
+import { doc, deleteDoc } from "firebase-admin/firestore"
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient()
+    const token = request.headers.get("authorization")?.split("Bearer ")[1]
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
+    if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { error } = await supabase
-      .from("quiz_results")
-      .delete()
-      .eq("id", params.id)
-      .eq("user_id", user.id)
+    const decodedToken = await adminAuth.verifyIdToken(token)
+    const userId = decodedToken.uid
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
+    const docRef = doc(adminDb, "users", userId, "quizResults", params.id)
+    await deleteDoc(docRef)
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {
     console.error("Error deleting quiz result:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : "Internal server error" },
+      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
     )
   }
 }
