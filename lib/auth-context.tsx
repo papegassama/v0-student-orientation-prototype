@@ -12,6 +12,7 @@ import {
   signUp as firebaseSignUp,
   signIn as firebaseSignIn,
   signOut as firebaseSignOut,
+  signInWithGoogle,
   getCurrentUser,
   onAuthStateChanged,
   saveQuizResult,
@@ -42,6 +43,7 @@ type AuthContextType = {
   isLoading: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (fullName: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   saveTestResult: (
     answers: Record<string, unknown>,
@@ -130,6 +132,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const firebaseUser = await signInWithGoogle()
+
+      setUser({
+        id: firebaseUser.id,
+        fullName: firebaseUser.fullName || "",
+        email: firebaseUser.email || "",
+      })
+
+      return { success: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue"
+      return { success: false, error: errorMessage }
+    }
+  }
+
   const logout = async () => {
     try {
       await firebaseSignOut()
@@ -192,6 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         signup,
+        loginWithGoogle,
         logout,
         saveTestResult,
         getTestHistory,

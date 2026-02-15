@@ -179,25 +179,15 @@ export async function saveQuizResult(
 ): Promise<string> {
   try {
     const userQuizResultsRef = collection(db, 'users', userId, 'quizResults');
-    const docRef = await setDoc(
-      doc(userQuizResultsRef),
-      {
-        answers,
-        recommendations,
-        createdAt: Timestamp.now(),
-      },
-      { merge: false }
-    );
+    const newDocRef = doc(userQuizResultsRef);
+    
+    await setDoc(newDocRef, {
+      answers,
+      recommendations,
+      createdAt: Timestamp.now(),
+    });
 
-    // Get the actual document ID that was created
-    const newDoc = await getDocs(
-      query(
-        userQuizResultsRef,
-        where('createdAt', '==', Timestamp.now())
-      )
-    );
-
-    return newDoc.docs[0]?.id || '';
+    return newDocRef.id;
   } catch (error) {
     throw formatAuthError(error);
   }
@@ -231,14 +221,18 @@ export async function saveOrientationResponse(
   userId: string,
   questionId: string,
   responseData: Record<string, any>
-): Promise<void> {
+): Promise<string> {
   try {
     const userResponsesRef = collection(db, 'users', userId, 'orientationResponses');
-    await setDoc(doc(userResponsesRef), {
+    const newDocRef = doc(userResponsesRef);
+    
+    await setDoc(newDocRef, {
       questionId,
       responseData,
       createdAt: Timestamp.now(),
     });
+
+    return newDocRef.id;
   } catch (error) {
     throw formatAuthError(error);
   }
