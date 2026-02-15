@@ -18,14 +18,9 @@ ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS password_hash TEXT;
 
 -- Create function to clean up expired sessions
 CREATE OR REPLACE FUNCTION delete_expired_sessions()
-RETURNS void AS $$
+RETURNS trigger AS $$
 BEGIN
   DELETE FROM sessions WHERE expires_at < CURRENT_TIMESTAMP;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
--- Create trigger to periodically clean up expired sessions
-DROP TRIGGER IF EXISTS cleanup_expired_sessions_trigger ON sessions;
-CREATE TRIGGER cleanup_expired_sessions_trigger
-AFTER INSERT ON sessions
-EXECUTE FUNCTION delete_expired_sessions();

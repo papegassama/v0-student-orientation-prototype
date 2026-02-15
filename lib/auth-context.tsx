@@ -9,16 +9,15 @@ import {
   type ReactNode,
 } from "react"
 import {
-  signUp as firebaseSignUp,
-  signIn as firebaseSignIn,
-  signOut as firebaseSignOut,
-  signInWithGoogle,
+  signUp,
+  signIn,
+  signOut,
   getCurrentUser,
   onAuthStateChanged,
   saveQuizResult,
   getQuizResults,
   deleteQuizResult,
-} from "@/lib/auth"
+} from "@/lib/auth-postgres"
 
 type User = {
   id: string
@@ -43,7 +42,6 @@ type AuthContextType = {
   isLoading: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (fullName: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   saveTestResult: (
     answers: Record<string, unknown>,
@@ -60,20 +58,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged((firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          id: firebaseUser.id,
-          fullName: firebaseUser.fullName || "",
-          email: firebaseUser.email || "",
-        })
-      } else {
+    const checkAuth = async () => {
+      try {
+        const user = await getCurrentUser()
+        if (user) {
+          setUser({
+            id: user.id,
+            fullName: user.full_name || "",
+            email: user.email || "",
+          })
+        } else {
+          setUser(null)
+        }
+      } catch (error) {
+        console.error("Auth check error:", error)
         setUser(null)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
-    })
+    }
 
-    return () => unsubscribe()
+    checkAuth()
   }, [])
 
   const signup = async (
@@ -89,16 +94,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Le mot de passe doit contenir au moins 6 caractères" }
       }
 
-      const firebaseUser = await firebaseSignUp(
+      const result = await signUp(
         email.toLowerCase().trim(),
         password,
         fullName.trim()
       )
 
       setUser({
-        id: firebaseUser.id,
-        fullName: firebaseUser.fullName || "",
-        email: firebaseUser.email || "",
+        id: result.user.id,
+        fullName: result.user.full_name || "",
+        email: result.user.email || "",
       })
 
       return { success: true }
@@ -117,29 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Email et mot de passe requis" }
       }
 
-      const firebaseUser = await firebaseSignIn(email.toLowerCase().trim(), password)
+      const result = await signIn(email.toLowerCase().trim(), password)
 
       setUser({
-        id: firebaseUser.id,
-        fullName: firebaseUser.fullName || "",
-        email: firebaseUser.email || "",
-      })
-
-      return { success: true }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue"
-      return { success: false, error: errorMessage }
-    }
-  }
-
-  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const firebaseUser = await signInWithGoogle()
-
-      setUser({
-        id: firebaseUser.id,
-        fullName: firebaseUser.fullName || "",
-        email: firebaseUser.email || "",
+        id: result.user.id,
+        fullName: result.user.full_name || "",
+        email: result.user.email || "",
       })
 
       return { success: true }
@@ -151,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await firebaseSignOut()
+      await signOut()
       setUser(null)
     } catch (error) {
       console.error("Logout error:", error)
@@ -211,7 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         signup,
-        loginWithGoogle,
         logout,
         saveTestResult,
         getTestHistory,

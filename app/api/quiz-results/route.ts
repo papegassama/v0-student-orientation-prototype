@@ -1,81 +1,65 @@
 import { NextRequest, NextResponse } from "next/server"
-import { adminDb, verifyIdToken } from "@/lib/firebase-admin"
-import { collection, addDoc, getDocs, query, orderBy, Timestamp } from "firebase-admin/firestore"
+import { neon } from "@neondatabase/serverless"
+
+const sql = neon(process.env.DATABASE_URL!)
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.split("Bearer ")[1]
+    const userId = request.headers.get("x-user-id")
 
-    if (!token) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const decodedToken = await verifyIdToken(token)
-    const userId = decodedToken.uid
 
     const body = await request.json()
     const { answers, recommendations } = body
 
-    if (!adminDb) {
-      return NextResponse.json({ error: "Database not initialized" }, { status: 500 })
-    }
-
-    const userQuizResultsRef = collection(adminDb, "users", userId, "quizResults")
-    const docRef = await addDoc(userQuizResultsRef, {
-      answers,
-      recommendations,
-      createdAt: Timestamp.now(),
-    })
+    const result = await sql`
+      INSERT INTO quiz_results (user_id, answers, recommendations, created_at)
+      VALUES (${userId}, ${JSON.stringify(answers)}, ${JSON.stringify(recommendations)}, CURRENT_TIMESTAMP)
+      RETURNING id, user_id, answers, recommendations, created_at
+    `
 
     return NextResponse.json(
       {
-        id: docRef.id,
-        answers,
-        recommendations,
-        createdAt: Timestamp.now().toDate().toISOString(),
+        id: result[0].id,
+        userId: result[0].user_id,
+        answers: result[0].answers,
+        recommendations: result[0].recommendations,
+        createdAt: result[0].created_at,
       },
       { status: 201 }
     )
   } catch (error) {
     console.error("Error saving quiz result:", error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal server error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
+      { error: "Internal server error" },
+      { status: 500 }
     )
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.split("Bearer ")[1]
+    const userId = request.headers.get("x-user-id")
 
-    if (!token) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const decodedToken = await verifyIdToken(token)
-    const userId = decodedToken.uid
-
-    if (!adminDb) {
-      return NextResponse.json({ error: "Database not initialized" }, { status: 500 })
-    }
-
-    const userQuizResultsRef = collection(adminDb, "users", userId, "quizResults")
-    const q = query(userQuizResultsRef, orderBy("createdAt", "desc"))
-    const snapshot = await getDocs(q)
-
-    const results = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString?.() || doc.data().createdAt,
-    }))
+    const results = await sql`
+      SELECT id, user_id, answers, recommendations, created_at
+      FROM quiz_results
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+    `
 
     return NextResponse.json(results, { status: 200 })
   } catch (error) {
     console.error("Error fetching quiz results:", error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal server error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
+      { error: "Internal server error" },
+      { status: 500 }
     )
   }
 }
