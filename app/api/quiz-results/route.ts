@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { adminAuth, adminDb } from "@/lib/firebase-admin"
+import { adminDb, verifyIdToken } from "@/lib/firebase-admin"
 import { collection, addDoc, getDocs, query, orderBy, Timestamp } from "firebase-admin/firestore"
 
 export async function POST(request: NextRequest) {
@@ -10,11 +10,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(token)
+    const decodedToken = await verifyIdToken(token)
     const userId = decodedToken.uid
 
     const body = await request.json()
     const { answers, recommendations } = body
+
+    if (!adminDb) {
+      return NextResponse.json({ error: "Database not initialized" }, { status: 500 })
+    }
 
     const userQuizResultsRef = collection(adminDb, "users", userId, "quizResults")
     const docRef = await addDoc(userQuizResultsRef, {
@@ -49,8 +53,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(token)
+    const decodedToken = await verifyIdToken(token)
     const userId = decodedToken.uid
+
+    if (!adminDb) {
+      return NextResponse.json({ error: "Database not initialized" }, { status: 500 })
+    }
 
     const userQuizResultsRef = collection(adminDb, "users", userId, "quizResults")
     const q = query(userQuizResultsRef, orderBy("createdAt", "desc"))

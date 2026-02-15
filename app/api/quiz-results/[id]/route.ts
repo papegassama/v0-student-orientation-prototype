@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { adminAuth, adminDb } from "@/lib/firebase-admin"
+import { adminDb, verifyIdToken } from "@/lib/firebase-admin"
 import { doc, deleteDoc } from "firebase-admin/firestore"
 
 export async function DELETE(
@@ -13,8 +13,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(token)
+    const decodedToken = await verifyIdToken(token)
     const userId = decodedToken.uid
+
+    if (!adminDb) {
+      return NextResponse.json({ error: "Database not initialized" }, { status: 500 })
+    }
 
     const docRef = doc(adminDb, "users", userId, "quizResults", params.id)
     await deleteDoc(docRef)
