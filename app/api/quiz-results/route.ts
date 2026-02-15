@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
-
-const sql = neon(process.env.DATABASE_URL!)
+import { sql as getSql } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +12,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { answers, recommendations } = body
 
+    const sql = getSql()
     const result = await sql`
       INSERT INTO quiz_results (user_id, answers, recommendations, created_at)
       VALUES (${userId}, ${JSON.stringify(answers)}, ${JSON.stringify(recommendations)}, CURRENT_TIMESTAMP)
@@ -47,6 +46,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const sql = getSql()
     const results = await sql`
       SELECT id, user_id, answers, recommendations, created_at
       FROM quiz_results

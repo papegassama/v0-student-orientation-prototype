@@ -1,6 +1,6 @@
 'use server'
 
-import { sql } from './db'
+import { sql as getSql } from './db'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 
@@ -50,6 +50,7 @@ export async function signUp(
   fullName: string
 ): Promise<AuthUser> {
   try {
+    const sql = getSql()
     // Check if user already exists
     const existingUser = await sql`
       SELECT id FROM user_profiles WHERE email = ${email.toLowerCase()}
@@ -91,6 +92,7 @@ export async function signUp(
  */
 export async function signIn(email: string, password: string): Promise<AuthUser> {
   try {
+    const sql = getSql()
     const result = await sql`
       SELECT id, email, full_name as "fullName", password_hash as "passwordHash"
       FROM user_profiles
@@ -126,6 +128,7 @@ export async function signIn(email: string, password: string): Promise<AuthUser>
  */
 export async function createSession(userId: string): Promise<string> {
   try {
+    const sql = getSql()
     const token = generateSessionToken()
     const expiresAt = new Date(Date.now() + SESSION_DURATION)
 
@@ -145,6 +148,7 @@ export async function createSession(userId: string): Promise<string> {
  */
 export async function getUserFromSession(token: string): Promise<AuthUser | null> {
   try {
+    const sql = getSql()
     const result = await sql`
       SELECT up.id, up.email, up.full_name as "fullName"
       FROM sessions s
@@ -171,6 +175,7 @@ export async function getUserFromSession(token: string): Promise<AuthUser | null
  */
 export async function invalidateSession(token: string): Promise<void> {
   try {
+    const sql = getSql()
     await sql`
       DELETE FROM sessions WHERE token = ${token}
     `
@@ -189,6 +194,7 @@ export async function saveQuizResult(
   topCategories?: Record<string, unknown>
 ): Promise<string> {
   try {
+    const sql = getSql()
     const result = await sql`
       INSERT INTO quiz_results (user_id, answers, recommendations, top_categories, created_at, completed_at)
       VALUES (${userId}, ${JSON.stringify(answers)}, ${JSON.stringify(recommendations)}, ${topCategories ? JSON.stringify(topCategories) : null}, NOW(), NOW())
@@ -210,6 +216,7 @@ export async function saveQuizResult(
  */
 export async function getQuizResults(userId: string): Promise<any[]> {
   try {
+    const sql = getSql()
     const results = await sql`
       SELECT * FROM quiz_results
       WHERE user_id = ${userId}
@@ -227,6 +234,7 @@ export async function getQuizResults(userId: string): Promise<any[]> {
  */
 export async function deleteQuizResult(userId: string, resultId: string): Promise<void> {
   try {
+    const sql = getSql()
     await sql`
       DELETE FROM quiz_results
       WHERE id = ${resultId} AND user_id = ${userId}
@@ -245,6 +253,7 @@ export async function saveOrientationResponse(
   responseValue: string
 ): Promise<string> {
   try {
+    const sql = getSql()
     const result = await sql`
       INSERT INTO orientation_responses (user_id, question_id, response_value, created_at)
       VALUES (${userId}, ${questionId}, ${responseValue}, NOW())
@@ -266,6 +275,7 @@ export async function saveOrientationResponse(
  */
 export async function getOrientationResponses(userId: string): Promise<any[]> {
   try {
+    const sql = getSql()
     const results = await sql`
       SELECT * FROM orientation_responses
       WHERE user_id = ${userId}
@@ -276,4 +286,29 @@ export async function getOrientationResponses(userId: string): Promise<any[]> {
   } catch (error) {
     throw new Error('Failed to fetch orientation responses')
   }
+}
+
+/**
+ * Get current user from session cookie
+ */
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  try {
+    // In a real implementation, you'd get the session token from cookies
+    // For now, return null as session-based auth requires middleware
+    return null
+  } catch (error) {
+    return null
+  }
+}
+
+/**
+ * Listen to auth state changes (client-side)
+ * This is a placeholder for client-side auth state management
+ */
+export function onAuthStateChanged(callback: (user: AuthUser | null) => void): () => void {
+  // Schedule the callback to be called
+  Promise.resolve().then(() => callback(null))
+  
+  // Return unsubscribe function
+  return () => {}
 }

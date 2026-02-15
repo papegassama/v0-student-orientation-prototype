@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
-
-const sql = neon(process.env.DATABASE_URL!)
+import { sql as getSql } from "@/lib/db"
 
 export async function DELETE(
   request: NextRequest,
@@ -14,6 +12,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const sql = getSql()
     await sql`
       DELETE FROM quiz_results
       WHERE id = ${params.id} AND user_id = ${userId}
