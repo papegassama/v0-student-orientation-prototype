@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql as getSql } from "@/lib/db"
+import { deleteQuizResult } from "@/lib/auth-supabase"
+import { createClient } from "@/lib/supabase/server"
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = request.headers.get("x-user-id")
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const sql = getSql()
-    await sql`
-      DELETE FROM quiz_results
-      WHERE id = ${params.id} AND user_id = ${userId}
-    `
+    await deleteQuizResult(user.id, params.id)
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {

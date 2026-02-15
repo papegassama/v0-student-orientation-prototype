@@ -17,7 +17,7 @@ import {
   saveQuizResult,
   getQuizResults,
   deleteQuizResult,
-} from "@/lib/auth-postgres"
+} from "@/lib/auth-supabase"
 
 type User = {
   id: string
