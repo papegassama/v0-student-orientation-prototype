@@ -8,8 +8,16 @@ import {
   useCallback,
   type ReactNode,
 } from "react"
-import { createClient } from "@/lib/supabase/client"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
+import {
+  signUp as firebaseSignUp,
+  signIn as firebaseSignIn,
+  signOut as firebaseSignOut,
+  getCurrentUser,
+  onAuthStateChanged,
+  saveQuizResult,
+  getQuizResults,
+  deleteQuizResult,
+} from "@/lib/auth"
 
 type User = {
   id: string
@@ -48,39 +56,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const {
-          data: { user: supabaseUser },
-        } = await supabase.auth.getUser()
-
-        if (supabaseUser) {
-          const { data: profile } = await supabase
-            .from("user_profiles")
-            .select("*")
-            .eq("user_id", supabaseUser.id)
-            .single()
-
-          if (profile) {
-            setUser({
-              id: supabaseUser.id,
-              fullName: profile.full_name,
-              email: supabaseUser.email || "",
-            })
-          }
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error)
-      } finally {
-        setIsLoading(false)
+    const unsubscribe = onAuthStateChanged((firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          id: firebaseUser.id,
+          fullName: firebaseUser.fullName || "",
+          email: firebaseUser.email || "",
+        })
+      } else {
+        setUser(null)
       }
-    }
+      setIsLoading(false)
+    })
 
-    initializeAuth()
-  }, [supabase])
+    return () => unsubscribe()
+  }, [])
 
   const signup = async (
     fullName: string,
@@ -95,42 +87,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Le mot de passe doit contenir au moins 6 caractères" }
       }
 
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: email.toLowerCase().trim(),
+      const firebaseUser = await firebaseSignUp(
+        email.toLowerCase().trim(),
         password,
+        fullName.trim()
+      )
+
+      setUser({
+        id: firebaseUser.id,
+        fullName: firebaseUser.fullName || "",
+        email: firebaseUser.email || "",
       })
 
-      if (authError) {
-        return { success: false, error: authError.message }
-      }
-
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from("user_profiles")
-          .insert([
-            {
-              user_id: data.user.id,
-              full_name: fullName.trim(),
-              email: email.toLowerCase().trim(),
-            },
-          ])
-
-        if (profileError) {
-          return { success: false, error: profileError.message }
-        }
-
-        setUser({
-          id: data.user.id,
-          fullName: fullName.trim(),
-          email: email.toLowerCase().trim(),
-        })
-
-        return { success: true }
-      }
-
-      return { success: false, error: "Signup failed" }
+      return { success: true }
     } catch (error) {
-      return { success: false, error: "Une erreur est survenue" }
+      const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue"
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -143,44 +115,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Email et mot de passe requis" }
       }
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
-        password,
+      const firebaseUser = await firebaseSignIn(email.toLowerCase().trim(), password)
+
+      setUser({
+        id: firebaseUser.id,
+        fullName: firebaseUser.fullName || "",
+        email: firebaseUser.email || "",
       })
 
-      if (authError) {
-        return { success: false, error: "Email ou mot de passe incorrect" }
-      }
-
-      if (data.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", data.user.id)
-          .single()
-
-        if (profileError || !profile) {
-          return { success: false, error: "Profil utilisateur non trouvé" }
-        }
-
-        setUser({
-          id: data.user.id,
-          fullName: profile.full_name,
-          email: data.user.email || "",
-        })
-
-        return { success: true }
-      }
-
-      return { success: false, error: "Login failed" }
+      return { success: true }
     } catch (error) {
-      return { success: false, error: "Une erreur est survenue" }
+      const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue"
+      return { success: false, error: errorMessage }
     }
   }
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut()
+      await firebaseSignOut()
       setUser(null)
     } catch (error) {
       console.error("Logout error:", error)
@@ -195,38 +147,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user) return
 
       try {
-        await supabase.from("quiz_results").insert([
-          {
-            user_id: user.id,
-            answers,
-            recommendations,
-          },
-        ])
+        await saveQuizResult(user.id, answers, recommendations)
       } catch (error) {
         console.error("Error saving test result:", error)
       }
     },
-    [user, supabase]
+    [user]
   )
 
   const getTestHistory = useCallback(async (): Promise<TestHistoryEntry[]> => {
     if (!user) return []
 
     try {
-      const { data, error } = await supabase
-        .from("quiz_results")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Error fetching test history:", error)
-        return []
-      }
-
-      return (data || []).map((entry: any) => ({
+      const results = await getQuizResults(user.id)
+      return results.map((entry: any) => ({
         id: entry.id,
-        date: entry.created_at,
+        date: entry.createdAt?.toDate?.().toISOString?.() || entry.createdAt || "",
         answers: entry.answers,
         recommendations: entry.recommendations,
       }))
@@ -234,23 +170,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error getting test history:", error)
       return []
     }
-  }, [user, supabase])
+  }, [user])
 
   const deleteTestEntry = useCallback(
     async (id: string) => {
       if (!user) return
 
       try {
-        await supabase
-          .from("quiz_results")
-          .delete()
-          .eq("id", id)
-          .eq("user_id", user.id)
+        await deleteQuizResult(user.id, id)
       } catch (error) {
         console.error("Error deleting test entry:", error)
       }
     },
-    [user, supabase]
+    [user]
   )
 
   return (
