@@ -25,6 +25,19 @@ export default function LoginPage() {
     setError("")
     setIsSubmitting(true)
 
+    // Validate inputs
+    if (!username.trim()) {
+      setError("Le nom d'utilisateur est requis")
+      setIsSubmitting(false)
+      return
+    }
+
+    if (!password) {
+      setError("Le mot de passe est requis")
+      setIsSubmitting(false)
+      return
+    }
+
     const result = await login(username, password)
 
     if (result.success) {
@@ -84,7 +97,9 @@ export default function LoginPage() {
                   placeholder="Ton nom d'utilisateur"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary disabled:opacity-50"
+                  disabled={isSubmitting}
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -100,14 +115,20 @@ export default function LoginPage() {
                   placeholder="Ton mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary disabled:opacity-50"
+                  disabled={isSubmitting}
+                  autoComplete="current-password"
                   required
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" disabled={isSubmitting}>
-              {isSubmitting ? "Connexion..." : "Se connecter"}
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" 
+              disabled={isSubmitting || !username.trim() || !password}
+            >
+              {isSubmitting ? "Connexion en cours..." : "Se connecter"}
             </Button>
           </form>
 
