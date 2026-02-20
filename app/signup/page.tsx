@@ -8,15 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Mail, Lock, User, AlertCircle, CheckCircle, Zap, Rocket } from "lucide-react"
+import { Lock, User, AlertCircle, CheckCircle, Zap } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { Logo } from "@/components/logo"
 
 export default function SignupPage() {
   const router = useRouter()
   const { signup } = useAuth()
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
@@ -29,6 +28,38 @@ export default function SignupPage() {
     setSuccess("")
     setIsSubmitting(true)
 
+    // Validate username
+    if (!username.trim()) {
+      setError("Le nom d'utilisateur est requis")
+      setIsSubmitting(false)
+      return
+    }
+
+    if (username.length < 3) {
+      setError("Le nom d'utilisateur doit contenir au moins 3 caractères")
+      setIsSubmitting(false)
+      return
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      setError("Le nom d'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores")
+      setIsSubmitting(false)
+      return
+    }
+
+    // Validate password
+    if (!password) {
+      setError("Le mot de passe est requis")
+      setIsSubmitting(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères")
+      setIsSubmitting(false)
+      return
+    }
+
     // Check password confirmation
     if (password !== confirmPassword) {
       setError("Les mots de passe ne correspondent pas")
@@ -36,7 +67,7 @@ export default function SignupPage() {
       return
     }
 
-    const result = await signup(fullName, email, password)
+    const result = await signup(username, password)
 
     if (result.success) {
       setSuccess("Inscription reussie ! Redirection...")
@@ -96,34 +127,25 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-sm font-semibold">Nom complet</Label>
+              <Label htmlFor="username" className="text-sm font-semibold">Nom d'utilisateur</Label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  id="fullName"
+                  id="username"
                   type="text"
-                  placeholder="Prénom Nom"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  placeholder="Choisis un nom d'utilisateur"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary disabled:opacity-50"
+                  minLength={3}
+                  maxLength={30}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="ton.email@exemple.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
-                  required
-                />
+              <div className="flex justify-between">
+                <p className="text-xs text-muted-foreground ml-1">3-30 caractères, lettres, chiffres, tirets et underscores</p>
+                <p className="text-xs text-muted-foreground">{username.length}/30</p>
               </div>
             </div>
 
@@ -137,8 +159,9 @@ export default function SignupPage() {
                   placeholder="Minimum 6 caractères"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary disabled:opacity-50"
                   minLength={6}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
@@ -155,10 +178,16 @@ export default function SignupPage() {
                   placeholder="Confirme ton mot de passe"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  className={`pl-12 h-12 text-base rounded-xl border-2 focus:border-primary disabled:opacity-50 ${
+                    confirmPassword && password !== confirmPassword ? "border-destructive" : ""
+                  }`}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
+              {confirmPassword && password !== confirmPassword && (
+                <p className="text-xs text-destructive ml-1">Les mots de passe ne correspondent pas</p>
+              )}
             </div>
 
             <Button type="submit" className="w-full h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" disabled={isSubmitting}>

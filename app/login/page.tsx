@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Mail, Lock, AlertCircle, Sparkles, Rocket } from "lucide-react"
+import { Lock, User, AlertCircle, Sparkles } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { Logo } from "@/components/logo"
 
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -25,7 +25,20 @@ export default function LoginPage() {
     setError("")
     setIsSubmitting(true)
 
-    const result = await login(email, password)
+    // Validate inputs
+    if (!username.trim()) {
+      setError("Le nom d'utilisateur est requis")
+      setIsSubmitting(false)
+      return
+    }
+
+    if (!password) {
+      setError("Le mot de passe est requis")
+      setIsSubmitting(false)
+      return
+    }
+
+    const result = await login(username, password)
 
     if (result.success) {
       router.push("/orientation")
@@ -75,16 +88,18 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
+              <Label htmlFor="username" className="text-sm font-semibold">Nom d'utilisateur</Label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="ton.email@exemple.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  id="username"
+                  type="text"
+                  placeholder="Ton nom d'utilisateur"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary disabled:opacity-50"
+                  disabled={isSubmitting}
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -100,14 +115,20 @@ export default function LoginPage() {
                   placeholder="Ton mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary disabled:opacity-50"
+                  disabled={isSubmitting}
+                  autoComplete="current-password"
                   required
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" disabled={isSubmitting}>
-              {isSubmitting ? "Connexion..." : "Se connecter"}
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" 
+              disabled={isSubmitting || !username.trim() || !password}
+            >
+              {isSubmitting ? "Connexion en cours..." : "Se connecter"}
             </Button>
           </form>
 

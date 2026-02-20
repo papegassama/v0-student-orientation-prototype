@@ -9,12 +9,10 @@ import {
   type ReactNode,
 } from "react"
 import { createClient } from "@/lib/supabase/client"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 type User = {
   id: string
-  fullName: string
-  email: string
+  username: string
 }
 
 export type TestHistoryEntry = {
@@ -32,8 +30,8 @@ export type TestHistoryEntry = {
 type AuthContextType = {
   user: User | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signup: (fullName: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signup: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   saveTestResult: (
     answers: Record<string, unknown>,
@@ -47,141 +45,82 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    // Check for stored user session on mount
+    const storedUser = localStorage.getItem("auth_user")
+    if (storedUser) {
       try {
-        const {
-          data: { user: supabaseUser },
-        } = await supabase.auth.getUser()
-
-        if (supabaseUser) {
-          const { data: profile } = await supabase
-            .from("user_profiles")
-            .select("*")
-            .eq("user_id", supabaseUser.id)
-            .single()
-
-          if (profile) {
-            setUser({
-              id: supabaseUser.id,
-              fullName: profile.full_name,
-              email: supabaseUser.email || "",
-            })
-          }
-        }
+        setUser(JSON.parse(storedUser))
       } catch (error) {
-        console.error("Auth initialization error:", error)
-      } finally {
-        setIsLoading(false)
+        localStorage.removeItem("auth_user")
       }
     }
-
-    initializeAuth()
-  }, [supabase])
+    setIsLoading(false)
+  }, [])
 
   const signup = async (
-    fullName: string,
-    email: string,
+    username: string,
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      if (!fullName.trim()) {
-        return { success: false, error: "Le nom complet est requis" }
-      }
-      if (password.length < 6) {
-        return { success: false, error: "Le mot de passe doit contenir au moins 6 caractères" }
-      }
-
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: email.toLowerCase().trim(),
-        password,
+      setIsLoading(true)
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       })
 
-      if (authError) {
-        return { success: false, error: authError.message }
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.error || "Signup failed" }
       }
 
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from("user_profiles")
-          .insert([
-            {
-              user_id: data.user.id,
-              full_name: fullName.trim(),
-              email: email.toLowerCase().trim(),
-            },
-          ])
-
-        if (profileError) {
-          return { success: false, error: profileError.message }
-        }
-
-        setUser({
-          id: data.user.id,
-          fullName: fullName.trim(),
-          email: email.toLowerCase().trim(),
-        })
-
-        return { success: true }
-      }
-
-      return { success: false, error: "Signup failed" }
+      setUser(data.user)
+      localStorage.setItem("auth_user", JSON.stringify(data.user))
+      return { success: true }
     } catch (error) {
       return { success: false, error: "Une erreur est survenue" }
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const login = async (
-    email: string,
+    username: string,
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      if (!email || !password) {
-        return { success: false, error: "Email et mot de passe requis" }
-      }
-
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
-        password,
+      setIsLoading(true)
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       })
 
-      if (authError) {
-        return { success: false, error: "Email ou mot de passe incorrect" }
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.error || "Login failed" }
       }
 
-      if (data.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", data.user.id)
-          .single()
-
-        if (profileError || !profile) {
-          return { success: false, error: "Profil utilisateur non trouvé" }
-        }
-
-        setUser({
-          id: data.user.id,
-          fullName: profile.full_name,
-          email: data.user.email || "",
-        })
-
-        return { success: true }
-      }
-
-      return { success: false, error: "Login failed" }
+      setUser(data.user)
+      localStorage.setItem("auth_user", JSON.stringify(data.user))
+      return { success: true }
     } catch (error) {
       return { success: false, error: "Une erreur est survenue" }
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut()
       setUser(null)
+      localStorage.removeItem("auth_user")
     } catch (error) {
       console.error("Logout error:", error)
     }
