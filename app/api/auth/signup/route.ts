@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       .from('users')
       .insert({
         username: username.toLowerCase(),
-        hashed_password: hashedPassword,
+        password_hash: hashedPassword,
       })
       .select()
       .single();

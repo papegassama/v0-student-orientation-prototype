@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Get user by username
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, hashed_password')
+      .select('id, username, password_hash')
       .eq('username', username.toLowerCase())
       .single();
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Compare passwords
-    const passwordMatch = await bcrypt.compare(password, user.hashed_password);
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
       return NextResponse.json(
