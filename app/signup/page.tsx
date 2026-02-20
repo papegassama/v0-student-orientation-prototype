@@ -8,15 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Mail, Lock, User, AlertCircle, CheckCircle, Zap, Rocket } from "lucide-react"
+import { Lock, User, AlertCircle, CheckCircle, Zap } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { Logo } from "@/components/logo"
 
 export default function SignupPage() {
   const router = useRouter()
   const { signup } = useAuth()
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
@@ -36,7 +35,7 @@ export default function SignupPage() {
       return
     }
 
-    const result = await signup(fullName, email, password)
+    const result = await signup(username, password)
 
     if (result.success) {
       setSuccess("Inscription reussie ! Redirection...")
@@ -96,35 +95,21 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-sm font-semibold">Nom complet</Label>
+              <Label htmlFor="username" className="text-sm font-semibold">Nom d'utilisateur</Label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  id="fullName"
+                  id="username"
                   type="text"
-                  placeholder="Prénom Nom"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Choisis un nom d'utilisateur"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
+                  minLength={3}
                   required
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="ton.email@exemple.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 text-base rounded-xl border-2 focus:border-primary"
-                  required
-                />
-              </div>
+              <p className="text-xs text-muted-foreground ml-1">Au moins 3 caractères</p>
             </div>
 
             <div className="space-y-2">
