@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { useAuth, type TestHistoryEntry } from "@/lib/auth-context"
 import { Header } from "@/components/header"
+import { Logo } from "@/components/logo"
 
 export default function ProfilePage() {
   const router = useRouter()
