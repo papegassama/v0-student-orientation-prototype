@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card"
 import { ArrowRight, BookOpen, Target, Sparkles, LogOut, User, Zap, Rocket, Star, Mail, Instagram, Facebook, Twitter } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { Logo } from "@/components/logo"
-import { ExampleSection } from "@/components/example-section"
 
 export default function HomePage() {
   const router = useRouter()
@@ -195,9 +194,6 @@ export default function HomePage() {
           </Card>
         </div>
       </section>
-
-      {/* Example Section */}
-      <ExampleSection />
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20 md:py-28">

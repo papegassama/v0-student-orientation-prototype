@@ -63,7 +63,7 @@ export function MobileNav() {
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation text-muted-foreground active:text-primary"
+          className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation text-muted-foreground active:text-primary"
           aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
         >
           {theme === "light" ? (
@@ -82,7 +82,7 @@ export function MobileNav() {
         {/* Profile/account tab */}
         <Link
           href={user ? "/profile" : "/login"}
-          className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation ${
+          className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation ${
             pathname === "/profile"
               ? "text-primary"
               : pathname === "/login" || pathname === "/signup"
