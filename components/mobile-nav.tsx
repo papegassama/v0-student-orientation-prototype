@@ -1,10 +1,11 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 import { Home, Compass, History, User, Moon, Sun } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import { useTheme } from "@/lib/theme-context"
 
 const navItems = [
   { href: "/", label: "Accueil", icon: Home },
@@ -15,10 +16,21 @@ const navItems = [
 export function MobileNav() {
   const pathname = usePathname()
   const { user } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light")
+  }
 
   // Don't show on login/signup pages
   if (pathname === "/login" || pathname === "/signup") return null
+
+  if (!mounted) return null
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-area-bottom">
