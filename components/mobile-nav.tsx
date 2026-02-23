@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Compass, History, User } from "lucide-react"
+import { Home, Compass, History, User, Moon, Sun } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { useTheme } from "@/lib/theme-context"
 
 const navItems = [
   { href: "/", label: "Accueil", icon: Home },
@@ -14,6 +15,7 @@ const navItems = [
 export function MobileNav() {
   const pathname = usePathname()
   const { user } = useAuth()
+  const { theme, toggleTheme } = useTheme()
 
   // Don't show on login/signup pages
   if (pathname === "/login" || pathname === "/signup") return null
@@ -45,6 +47,25 @@ export function MobileNav() {
             </Link>
           )
         })}
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation text-muted-foreground active:text-primary"
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+        >
+          {theme === "light" ? (
+            <>
+              <Moon className="h-5 w-5" />
+              <span className="text-[10px] font-semibold leading-tight">Sombre</span>
+            </>
+          ) : (
+            <>
+              <Sun className="h-5 w-5" />
+              <span className="text-[10px] font-semibold leading-tight">Clair</span>
+            </>
+          )}
+        </button>
 
         {/* Profile/account tab */}
         <Link
