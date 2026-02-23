@@ -8,8 +8,6 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   ArrowLeft,
-  LogOut,
-  User,
   History,
   Trash2,
   Rocket,
@@ -19,7 +17,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { useAuth, type TestHistoryEntry } from "@/lib/auth-context"
-import { Logo } from "@/components/logo"
+import { Header } from "@/components/header"
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -92,20 +90,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/orientation" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <Logo />
-            <span className="font-bold text-xl tracking-tight">MonOrienta</span>
-          </Link>
-          <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 bg-transparent rounded-full">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Déconnexion</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-4xl mx-auto space-y-8">
@@ -117,8 +102,8 @@ export default function ProfilePage() {
                   <User className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <div className="space-y-2">
-                  <h1 className="text-3xl md:text-4xl font-black">{user.fullName}</h1>
-                  <p className="text-lg text-muted-foreground">{user.email}</p>
+                  <h1 className="text-3xl md:text-4xl font-black">{user.username}</h1>
+                  <p className="text-lg text-muted-foreground">ID: {user.id}</p>
                 </div>
               </div>
               <Link href="/orientation">
