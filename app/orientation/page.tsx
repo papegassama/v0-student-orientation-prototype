@@ -241,12 +241,21 @@ export default function OrientationPage() {
 
     // Checkbox type
     const field = q.field as "favoriteSubjects" | "difficultSubjects" | "interests"
+    
+    // Filter out favorite subjects when rendering difficult subjects
+    let filteredOptions = q.options
+    if (field === "difficultSubjects" && answers.favoriteSubjects.length > 0) {
+      filteredOptions = q.options.filter(
+        (opt) => !answers.favoriteSubjects.includes(opt.value)
+      )
+    }
+    
     return (
       <div className="space-y-3">
         <Label className="text-base font-semibold">{q.label}</Label>
         <p className="text-sm text-muted-foreground -mt-1">Plusieurs choix possibles</p>
         <div className="space-y-2">
-          {q.options.map((opt) => (
+          {filteredOptions.map((opt) => (
             <label
               key={opt.value}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation active:scale-[0.98] ${
