@@ -20,6 +20,7 @@ import {
   Trophy,
   Target,
   History,
+  Rocket,
 } from "lucide-react"
 import { generateRecommendations, type Answers, type Recommendation } from "@/lib/orientation-logic"
 import { useAuth } from "@/lib/auth-context"
