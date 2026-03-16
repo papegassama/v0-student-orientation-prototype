@@ -1,8 +1,10 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Compass, History, User } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Home, Compass, History, User, Moon, Sun } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
 const navItems = [
@@ -14,9 +16,21 @@ const navItems = [
 export function MobileNav() {
   const pathname = usePathname()
   const { user } = useAuth()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light")
+  }
 
   // Don't show on login/signup pages
   if (pathname === "/login" || pathname === "/signup") return null
+
+  if (!mounted) return null
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-area-bottom">
@@ -46,10 +60,29 @@ export function MobileNav() {
           )
         })}
 
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation text-muted-foreground active:text-primary"
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+        >
+          {theme === "light" ? (
+            <>
+              <Moon className="h-5 w-5" />
+              <span className="text-[10px] font-semibold leading-tight">Sombre</span>
+            </>
+          ) : (
+            <>
+              <Sun className="h-5 w-5" />
+              <span className="text-[10px] font-semibold leading-tight">Clair</span>
+            </>
+          )}
+        </button>
+
         {/* Profile/account tab */}
         <Link
           href={user ? "/profile" : "/login"}
-          className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation ${
+          className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 pt-3 transition-colors touch-manipulation ${
             pathname === "/profile"
               ? "text-primary"
               : pathname === "/login" || pathname === "/signup"

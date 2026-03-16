@@ -4,14 +4,14 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, Rocket, LogOut, User, Sparkles, Zap, Star } from "lucide-react"
+import { ArrowLeft, ArrowRight, Rocket, Sparkles, Zap, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/lib/auth-context"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Logo } from "@/components/logo"
+import { Header } from "@/components/header"
 
 type Answers = {
   stream: string
@@ -241,12 +241,21 @@ export default function OrientationPage() {
 
     // Checkbox type
     const field = q.field as "favoriteSubjects" | "difficultSubjects" | "interests"
+    
+    // Filter out favorite subjects when rendering difficult subjects
+    let filteredOptions = q.options
+    if (field === "difficultSubjects" && answers.favoriteSubjects.length > 0) {
+      filteredOptions = q.options.filter(
+        (opt) => !answers.favoriteSubjects.includes(opt.value)
+      )
+    }
+    
     return (
       <div className="space-y-3">
         <Label className="text-base font-semibold">{q.label}</Label>
         <p className="text-sm text-muted-foreground -mt-1">Plusieurs choix possibles</p>
         <div className="space-y-2">
-          {q.options.map((opt) => (
+          {filteredOptions.map((opt) => (
             <label
               key={opt.value}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation active:scale-[0.98] ${
@@ -304,32 +313,7 @@ export default function OrientationPage() {
       </div>
 
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 md:gap-3">
-            <Logo size="sm" />
-            <span className="font-bold text-lg md:text-xl tracking-tight">MonOrienta</span>
-          </Link>
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold">
-              {stepIcons[(isMobile ? currentQuestion.step : desktopStep) - 1]}
-              {isMobile ? `${mobileQuestionIndex + 1}/${totalQuestions}` : `Etape ${desktopStep}/3`}
-            </div>
-            <div className="flex items-center gap-2 md:gap-3">
-              <span className="hidden md:flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-                {user.fullName}
-              </span>
-              <Button variant="outline" size="sm" onClick={() => logout().then(() => router.push("/login"))} className="gap-1.5 bg-transparent rounded-full">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Deconnexion</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-6 md:py-12">
         <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">

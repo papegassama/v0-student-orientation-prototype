@@ -60,9 +60,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Signup error:', error);
+      console.error('Signup database error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return NextResponse.json(
-        { error: 'Failed to create user' },
+        { error: 'Failed to create user', details: error.message },
         { status: 500 }
       );
     }
@@ -78,9 +83,16 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('Signup catch error:', {
+      error: error instanceof Error ? error.message : String(error),
+      type: error instanceof Error ? error.constructor.name : typeof error,
+      supabaseUrl: supabaseUrl.substring(0, 20) + '...',
+    });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

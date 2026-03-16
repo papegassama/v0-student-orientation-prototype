@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import {
   ArrowLeft,
   BookOpen,
-  Rocket,
   TrendingUp,
   Clock,
   Building2,
@@ -22,9 +21,11 @@ import {
   Trophy,
   Target,
   History,
+  Rocket,
 } from "lucide-react"
 import { generateRecommendations, type Answers, type Recommendation } from "@/lib/orientation-logic"
 import { useAuth } from "@/lib/auth-context"
+import { Header } from "@/components/header"
 
 function ResultsContent() {
   const searchParams = useSearchParams()
@@ -99,16 +100,7 @@ function ResultsContent() {
       </div>
 
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25">
-              <Rocket className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">MonOrienta</span>
-          </Link>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-10 md:py-16">
         <div className="max-w-5xl mx-auto space-y-10">

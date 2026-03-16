@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
+import { ThemeProvider } from "@/components/theme-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { InstallPrompt } from "@/components/install-prompt"
 import "./globals.css"
@@ -54,13 +55,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-          <MobileNav />
-          <InstallPrompt />
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <AuthProvider>
+            {children}
+            <MobileNav />
+            <InstallPrompt />
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
