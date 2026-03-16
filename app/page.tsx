@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowRight, BookOpen, Target, Sparkles, Zap, Rocket, Star, Mail, Instagram, Facebook, Twitter } from "lucide-react"
 import { Header } from "@/components/header"
+import { Logo } from "@/components/logo"
 
 export default function HomePage() {
   return (
